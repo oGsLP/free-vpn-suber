@@ -9,7 +9,8 @@
 
 import requests
 import json
-from lib.util.util import *
+from lib.util.random import random_password, random_email
+from lib.util.log import *
 
 api = "https://v2aky.com/api/v1/"
 
@@ -34,7 +35,7 @@ def register():
     global email, password
     email = random_email()
     password = random_password(8)
-    print("1. register ...", end="")
+    log_step(1, "register")
     form_data = {
         'email': email,
         'password': password,
@@ -42,22 +43,22 @@ def register():
         'email_code': ""
     }
     res = requests.post(api + "passport/auth/register", params=form_data)
-    print("  √")
-    print("  + account:  " + email)
-    print("  + password: " + password)
+    log_success()
+    log_info("account", email)
+    log_info("password", password)
     # print(json.loads(res.content.decode(encoding='utf-8', errors='strict')))
     res.close()
 
 
 def login():
     global session
-    print("2. login ...", end="")
+    log_step(2, "login")
     form_data = {
         'email': email,
         'password': password
     }
     res = requests.post(api + "passport/auth/login", params=form_data)
-    print("  √")
+    log_success()
     # token = json.loads(res.content.decode(encoding='utf-8', errors='strict'))['data']['token']
     session = res.cookies["v2board_session"]
     # print('token')
@@ -67,7 +68,7 @@ def login():
 
 def order():
     global session
-    print("3. order ...", end="")
+    log_step(3, "order")
 
     form_data = {
         'plan_id': 1,
@@ -77,20 +78,20 @@ def order():
     session = res.cookies["v2board_session"]
 
     trade_no = json.loads(res.content.decode(encoding='utf-8', errors='strict'))['data']
-    print("  √")
+    log_success()
     # print(trade_no)
     res.close()
     return trade_no
 
 
 def checkout(trade_no):
-    print("4. checkout ...", end="")
+    log_step(4, "checkout")
     form_data = {
         'trade_no': trade_no,
         'method': 5
     }
     res = requests.post(api + "user/order/checkout", params=form_data, cookies={"v2board_session": session})
-    print("  √")
+    log_success()
     # print(res2.status_code)
     res.close()
     # res3 = requests.get(api + "user/order/check", params={'trade_no': trade_no}, cookies={"v2board_session": session})
@@ -99,17 +100,22 @@ def checkout(trade_no):
 
 
 def subscribe():
-    print("5. subscirbe ...:",end="")
+    log_step(5, "subscribe")
     res = requests.get(api + "user/getSubscribe", cookies={"v2board_session": session})
-    print("  √")
+    log_success()
     sub_url = json.loads(res.content.decode(encoding='utf-8', errors='strict'))['data']['subscribe_url']
-    print("  + get v2Ray subscription url (from https://v2aky.com): ")
-    print("  + "+sub_url)
+    log_info("get v2Ray subscription url (from https://v2aky.com)")
+    log_info(sub_url)
     res.close()
+    return sub_url
 
 
 def get_sub():
     register()
     login()
     checkout(order())
-    subscribe()
+    return subscribe()
+
+
+if __name__ == '__main__':
+    get_sub()
