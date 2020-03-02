@@ -8,5 +8,11 @@ __pycache__
 env/
 venv/
 
+*.spec
 *.txt
+
+build.sh
 test.py
+
+build
+
